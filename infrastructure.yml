@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Infrastruttura di Backend per il progetto TEDx Lingo. 
+  Include 3 Bucket S3 e le 6 Lambda Function fondamentali per l'app.
+
+Parameters:
+  BuildNumber:
+    Default: "1"
+    Description: "Numero di build per il tracking"
+    Type: String
+
+Resources:
+  # ==========================================
+  # 1. STORAGE (AMAZON S3)
+  # ==========================================
+  
+  # Bucket per i file audio estratti dai video (Pipeline Offline)
+  AudioS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: "unibg-tedx-lingo-data-tbgg-audio"
+
+  # Bucket per i risultati della trascrizione (AWS Transcribe)
+  TranscribeOutputBucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: "unibg-tedx-lingo-data-tbgg-transcripts"
+
+  # Bucket per i log di sistema 
+  LogsS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: "unibg-tedx-lingo-data-tbgg-logs"
+
+  # ==========================================
+  # 2. COMPUTE (AWS LAMBDA)
+  # ==========================================
+  
+  # --- GRUPPO 1: API per l'App Flutter ---
+
+  GetVideoAndTranscriptFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GetVideoAndTranscript
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Video e testo recuperati da MongoDB"}
+
+  TranslateWordFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: TranslateWord
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Traduzione via Amazon Translate completata"}
+
+  SaveFlashcardFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: SaveFlashcard
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Flashcard salvata con successo"}
+
+  GetUserFlashcardsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GetUserFlashcards
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Lista flashcard utente recuperata"}
+
+  # --- GRUPPO 2: Automazione e Notifiche ---
+
+  InitUserProfileFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: InitUserProfile
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Profilo MongoDB creato per nuovo utente"}
+
+  StreakAndReviewManagerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: StreakAndReviewManager
+      Role: "arn:aws:iam::867209561558:role/LabRole"
+      Runtime: python3.11
+      Handler: index.my_handler
+      Code:
+        ZipFile: |
+          def my_handler(event, context):
+              return {"statusCode": 200, "body": "Controllo streak ed invio notifica SNS"}
